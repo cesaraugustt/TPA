@@ -1,0 +1,127 @@
+---
+title: "Trabalho 01 - TPA"
+subtitle: " Análise de complexidade em estruturas de listas"
+author: "Gabriel Leite Fonseca e César"
+date: last-modified
+date-format: "DD/MM/YYYY"
+title-block-banner: '#ededed'
+format: 
+  html:
+    code-fold: true
+    embed-resources: true
+    smooth-scroll: true
+    theme: 
+      light: flatly
+      dark: darkly
+    toc: true
+    toc-location: right
+    toc-title: Sumário
+    toc-depth: 3
+output-dir: relatorios
+text: |
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+
+css: ../../styles/style.css
+execute:
+    echo: false
+jupyter: python3
+
+---
+
+<style>
+body {
+text-align: justify}
+</style>
+
+---
+
+# **4 - Análise Matemática de complexidade dos Algoritmos**
+
+### 4.1 - Quantidade de Nós
+```{java}
+public int quantidadeNos() {
+    return this.qtd;
+}
+```
+
+A forma optada por se implementar o método responsável por retornar a quantidade de nós foi a mais simples, tendo um atributo de quantos nós existe dentro da classe e apenas retornando esse atributo. O método é **log(1)** por ser consatnte, independente da quantidade de nós sempre retornando a mesma no mesmo tempo. 
+
+> Os valores foram tão baixos que uma visualização gráfica se tornou um artifício negativo para o relatório.
+
+| Iteração | Quantidade de Nós | Tempo (s)     |
+|----------|-------------------|---------------|
+| 1        | 1000              | 0,000001400   |
+| 2        | 5000              | 0,000000500   |
+| 3        | 10000             | 0,000000800   |
+| 4        | 20000             | 0,000000700   |
+| 5        | 50000             | 0,000001600   |
+| 6        | 100000            | 0,000001600   |
+| 7        | 1000000           | 0,000000000   |
+
+### 4.2 - Adicionar
+```{java}
+public void adicionar(T novoValor) {
+    Node<T> novo_ultimo  = new Node<T>();
+    novo_ultimo.value = novoValor;
+    
+    if (this.first == null) { this.first = this.last = novo_ultimo; }
+    else {
+        this.last.next    = novo_ultimo;
+        this.last         = novo_ultimo;
+        this.last.next    = null;
+    }
+    this.qtd += 1;
+}
+```
+
+Por ter sempre um ponteiro apontando para o útimo valor e - por ser um método que adiciona o valor como último - sua complexidade é contante (**O(1)**), visto que ele realiza apenas uma única atividade - de pegar o ponteiro que aponta para o último - e substituí-lo para fazer com que o novo se torne o novo último. 
+
+### 4.3 - Pesquisar
+```{java}
+public T pesquisar(T valor) {
+    Node<T> node_atual = this.first;
+
+    while (node_atual != null) {
+        if (node_atual.value.equals(valor)) { return valor; }
+        
+        node_atual = node_atual.next;
+    }
+    return null;
+}
+```
+
+O método de **pesquisar** é um método O(n). Dado o fato de se tratar de um looping que depende diretamente da quantidade de elementos da lista, basta diminuir a quantidade de elementos que o tempo vai diminuir também, assim o inverso também sendo verdade (aumentar a quantidade de elementos *pode* ocasionar aumento de tempo de busca). O pior cenário é o de um elemento não existir, fazendo com que o looping percorra toda a lista até o último elemento e utilizando o maior tempo possível.
+
+### 4.4 - Remover
+```{java}
+public boolean remover(T v) {
+    Node<T> node_atual    = this.first;
+    Node<T> node_anterior = node_atual;
+
+    while (node_atual != null) {
+        if (node_atual.value.equals(v)) {
+            if (node_anterior == node_atual) {
+                this.first = node_atual.next;
+                if (this.first == null) { this.last = null; }
+            }
+            else if (node_atual.next != null) {
+                node_anterior.next = node_atual.next;
+                node_atual         = null;
+            }
+            else {
+                this.last          = node_anterior;
+                node_anterior.next = null;
+                node_atual         = null;
+            }
+            this.qtd--;
+            return true; 
+        }
+
+        node_anterior = node_atual;
+        node_atual    = node_atual.next;
+    }
+    return false;
+}
+```
+
+# **6 - Análise Matemática de complexidade de ArrayList e LinkedList**
