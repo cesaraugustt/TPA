@@ -1,22 +1,22 @@
 ---
-title: "Trabalho 01 - TPA"
+title: "Trabalho 01"
 subtitle: " Análise de complexidade em estruturas de listas"
 author: "Gabriel Leite Fonseca e César"
 date: last-modified
 date-format: "DD/MM/YYYY"
 title-block-banner: '#ededed'
-format: 
-  html:
-    code-fold: true
-    embed-resources: true
-    smooth-scroll: true
-    theme: 
-      light: flatly
-      dark: darkly
-    toc: true
-    toc-location: right
-    toc-title: Sumário
-    toc-depth: 3
+format: pdf 
+#   html:
+#     code-fold: true
+#     embed-resources: true
+#     smooth-scroll: true
+#     theme: 
+#       light: flatly
+#       dark: darkly
+#     toc: true
+#     toc-location: right
+#     toc-title: Sumário
+#     toc-depth: 3
 output-dir: relatorios
 text: |
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
@@ -35,8 +35,12 @@ text-align: justify}
 
 ---
 
-# **4 - Análise Matemática de complexidade dos Algoritmos**
+# Seção 01
 
+
+
+# Seção 02
+## **4 - Análise Matemática de complexidade dos Algoritmos**
 ### 4.1 - Quantidade de Nós
 ```{java}
 public int quantidadeNos() {
@@ -44,84 +48,203 @@ public int quantidadeNos() {
 }
 ```
 
-A forma optada por se implementar o método responsável por retornar a quantidade de nós foi a mais simples, tendo um atributo de quantos nós existe dentro da classe e apenas retornando esse atributo. O método é **log(1)** por ser consatnte, independente da quantidade de nós sempre retornando a mesma no mesmo tempo. 
-
-> Os valores foram tão baixos que uma visualização gráfica se tornou um artifício negativo para o relatório.
-
-| Iteração | Quantidade de Nós | Tempo (s)     |
-|----------|-------------------|---------------|
-| 1        | 1000              | 0,000001400   |
-| 2        | 5000              | 0,000000500   |
-| 3        | 10000             | 0,000000800   |
-| 4        | 20000             | 0,000000700   |
-| 5        | 50000             | 0,000001600   |
-| 6        | 100000            | 0,000001600   |
-| 7        | 1000000           | 0,000000000   |
+A forma optada por se implementar o método responsável por retornar a quantidade de nós foi a mais simples, tendo um atributo de quantos nós existe dentro da classe e apenas retornando esse atributo. O método é **O(1)** por ser constante, independente da quantidade de nós sempre retornando a mesma no mesmo tempo. 
 
 ### 4.2 - Adicionar
 ```{java}
 public void adicionar(T novoValor) {
-    Node<T> novo_ultimo  = new Node<T>();
-    novo_ultimo.value = novoValor;
+    Node<T> novo_ultimo  = new Node<T>(); 
+    novo_ultimo.value = novoValor; 
     
-    if (this.first == null) { this.first = this.last = novo_ultimo; }
+    if (this.first == null) { this.first = this.last = novo_ultimo; } 
     else {
         this.last.next    = novo_ultimo;
         this.last         = novo_ultimo;
         this.last.next    = null;
     }
-    this.qtd += 1;
+    this.qtd += 1;  
 }
 ```
 
-Por ter sempre um ponteiro apontando para o útimo valor e - por ser um método que adiciona o valor como último - sua complexidade é contante (**O(1)**), visto que ele realiza apenas uma única atividade - de pegar o ponteiro que aponta para o último - e substituí-lo para fazer com que o novo se torne o novo último. 
+A complexidade do método **adicionar** é **O(1)**, pois é realizada uma inserção diretamente no final da lista, independente de quantos elemento a lista possua e sem precisar percorre-los um a um. Isso é possível pela referência apontada por *last* e pela natureza de adicionar sem se preocupar com a posição em que o elemento será inserido.
+
+A título de comparação, em um método de inserção no qual o elemento deve ser adicionado em uma posição específica definida, por exemplo, por um índice informado pelo usuário, a complexidade de tempo passa a ser O(n).
+
+Isso ocorre porque é necessário percorrer a estrutura elemento por elemento até alcançar a posição desejada. Esse processo de busca é linear em relação ao número de elementos da lista. Após localizar a posição correta, as demais operações de inserção possuem custo constante, mas não alteram a complexidade total do método, que permanece O(n) devido ao custo dominante.
 
 ### 4.3 - Pesquisar
-```{java}
-public T pesquisar(T valor) {
-    Node<T> node_atual = this.first;
 
-    while (node_atual != null) {
-        if (node_atual.value.equals(valor)) { return valor; }
-        
-        node_atual = node_atual.next;
-    }
-    return null;
+
+![Código método de pesquisa](imgs/pesquisar.jpg)
+
+::: {.callout-note}
+Para facilitar a análise, as linhas do código foram agrupadas em constantes (C1, C2, C3), representando operações de custo fixo (abordagem adotada para restante do relatório). O ponto principal está no laço de repetição, que pode executar até n vezes, dependendo do tamanho da lista. Por isso, o comportamento do algoritmo é determinado por esse trecho.
+:::
+
+A complexidade do método pesquisar é **O(n)**, pois a busca é realizada de forma sequencial ao longo da lista encadeada. Para localizar um valor, o algoritmo percorre os nós um a um, comparando seus conteúdos até encontrar o elemento desejado ou atingir o final da estrutura.
+
+No pior caso, quando o elemento não está presente (ou encontra-se na última posição), o método percorre todos *N* elementos da lista até que o ponteiro atual se torne nulo, encerrando a busca. Nesse cenário, o número de operações cresce proporcionalmente ao tamanho da lista, caracterizando um crescimento linear.
+
+### 4.4 - Remover
+
+![Código método de pesquisa](imgs/remover.jpg)
+
+O método remover, assim como o método pesquisar, apresenta complexidade de tempo **O(n)**, pois depende de uma percurso sequencial da lista para localizar o elemento a ser removido.
+
+Embora o corpo do laço contenha mais operações em comparação ao método de busca, essas operações possuem custo constante. Mesmo que existam diferenças de tempo entre elas, tais variações são desprezíveis na análise, podendo ser agrupadas em uma constante (C3).
+
+No pior caso, quando o elemento não está presente ou encontra-se na última posição, o algoritmo percorre todos os **N** elementos da lista. Assim, o custo total pode ser representado como proporcional a **N** e caracterizar um crescimento linear.
+
+Dessa forma, a complexidade do método é **O(n)**.
+
+
+# **6 - Análise ArrayList e LinkedList**
+## 6.1 - LinkedList
+Diferente de um Array o qual deve ter um tamanho definido de memória, a estrutura **LinkedList** do Java apresneta alocação dinâmica, alterando o espaço armazenado a medida que elementos são adicionados ou removidos. A **LinkedList** faz parte da **Java Collections** e implementa a *AbstractSequentialList*, o que - de forma prática - implica que o acesso a um elemento da lista é feita de forma sequencial, percorrendo um a um. 
+
+![Implementação LinkedList](imgs/fluxograma.jpg)
+
+A estrutura mantém referências tanto para o primeiro quanto para o último nó da lista. Além disso, cada nó possui ponteiros para o elemento seguinte (next) e para o anterior (prev), caracterizando a estrutura como uma lista duplamente encadeada. Essa característica permite inserções eficientes nas extremidades, reduzindo o custo dessas operações para tempo constante.
+
+```{java}
+// Implemtentação: apontando para primeiro e último elementos
+
+public class LinkedList<E>
+    extends AbstractSequentialList<E>
+    implements List<E>, Deque<E>, Cloneable, java.io.Serializable
+{
+    transient int size = 0;
+
+    /**
+     * Pointer to first node.
+     */
+    transient Node<E> first;
+
+    /**
+     * Pointer to last node.
+     */
+    transient Node<E> last;
+```
+
+### Métodos
+
+#### **Adicionar**
+A forma de se adicionar a um elemento em uma **LinkedList** é feito - principalmente - pelo método **add(E e)**. Além dele, também existem variações como **addFirst(E e)**, **addLast(E e)** e **add(int index, E element)**, cada uma com comportamentos distintos. Por existir ponteiros apontando para o primeiro e último elemento, as funções **addFirst** e **addLast** tem uma complexidade constante, por não serem alteradas de forma correlacionada a quantidade de elementos na lista. 
+
+O método **add(E e)** delega sua execução ao método **linkLast(E e)**, responsável por inserir o novo elemento ao final da lista utilizando a referência ao último nó. Como não há necessidade de percorrer a estrutura, a operação possui complexidade O(1).
+
+```{java}
+// Método de adicionar elemento a lista encadeada
+public boolean add(E e) {
+    linkLast(e);
+    return true;
+}
+
+// Método chamado por add
+void linkLast(E e) {
+    final Node<E> l = last;
+    final Node<E> newNode = new Node<>(l, e, null);
+    last = newNode;
+    if (l == null)
+        first = newNode;
+    else
+        l.next = newNode;
+    size++;
+    modCount++;
 }
 ```
 
-O método de **pesquisar** é um método O(n). Dado o fato de se tratar de um looping que depende diretamente da quantidade de elementos da lista, basta diminuir a quantidade de elementos que o tempo vai diminuir também, assim o inverso também sendo verdade (aumentar a quantidade de elementos *pode* ocasionar aumento de tempo de busca). O pior cenário é o de um elemento não existir, fazendo com que o looping percorra toda a lista até o último elemento e utilizando o maior tempo possível.
+Contudo, o método **add(int index, E element)** - diferente dos citados anteriormente - acaba por ter complexidade Linear. Ao receber o índice como parâmetro, a lista precisa percorrer seus elementos nó a nó até alcançar a posição correspondente. Esse processo de localização possui custo linear em relação ao número de elementos armazenados.
 
-### 4.4 - Remover
+O pior caso ocorre quando o índice está aproximadamente no meio da lista, pois - mesmo com a otimização que permite iniciar o percurso a partir do início ou do fim - ainda será necessário percorrer n/2 elementos. Assim, o tempo de execução cresce proporcionalmente ao tamanho da lista, caracterizando a complexidade **O(n)**.
+
+#### **Remover**
+A remoção de elementos em uma **LinkedList** pode ser realizada de duas formas principais: por índice ou valor sendo - para ambos os casos - complexidade **O(N)**.
+
+Para a remoção por objeto, cada nó é comparado com o valor passado como parâmetro, em que toda a estrutura será percorrida no caso do elemento não estar presente, fazendo com que o tempo de execução cresça proporcionalmente ao número de elementos da lista.
+
+A implementação também trata explicitamente o caso em que o valor buscado é nulo, decorrido o fato da **LinkedList** permitir a inserção de elementos **null**. Dessa forma, a verificação inicial evita a chamada do método equals sobre uma referência nula, o que resultaria em uma exceção.
+
 ```{java}
-public boolean remover(T v) {
-    Node<T> node_atual    = this.first;
-    Node<T> node_anterior = node_atual;
-
-    while (node_atual != null) {
-        if (node_atual.value.equals(v)) {
-            if (node_anterior == node_atual) {
-                this.first = node_atual.next;
-                if (this.first == null) { this.last = null; }
+public boolean remove(Object o) {
+    if (o == null) {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (x.item == null) {
+                unlink(x);
+                return true;
             }
-            else if (node_atual.next != null) {
-                node_anterior.next = node_atual.next;
-                node_atual         = null;
-            }
-            else {
-                this.last          = node_anterior;
-                node_anterior.next = null;
-                node_atual         = null;
-            }
-            this.qtd--;
-            return true; 
         }
-
-        node_anterior = node_atual;
-        node_atual    = node_atual.next;
+    } else {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item)) {
+                unlink(x);
+                return true;
+            }
+        }
     }
     return false;
 }
 ```
 
-# **6 - Análise Matemática de complexidade de ArrayList e LinkedList**
+Já a remoção por índice pode ter um tempo de execução *menor* ao pior caso da remoção por objeto por percorrer apenas metade da lista, mas também cresce o tempo de execução de forma proporcional a quantidade de elementos na lista. caso o índice esteja na primeira metade da lista, a busca é realizada a partir do início (first); caso contrário, inicia-se a partir do final (last). Essa estratégia reduz a quantidade de elementos percorridos, limitando o percurso a - no máximo - *n/2* elementos. Apesar disso, sua complexidade se mantém **O(N)**.
+
+```{java}
+// Remover por índice
+public E remove(int index) {
+    checkElementIndex(index);
+    return unlink(node(index));
+}
+
+Node<E> node(int index) {
+    // assert isElementIndex(index);
+
+    if (index < (size >> 1)) {
+        Node<E> x = first;
+        for (int i = 0; i < index; i++)
+            x = x.next;
+        return x;
+    } else {
+        Node<E> x = last;
+        for (int i = size - 1; i > index; i--)
+            x = x.prev;
+        return x;
+    }
+}
+```
+
+#### **Busca**
+A busca em uma LinkedList pode ser realizada de duas formas principais: por índice ou por valor do elemento.
+
+Na busca por objeto **contains(Object O)**, é utilizada internamente o método **indexOf(Object O)**, sendo parcialmente igual ao método de remoção por índice mas - ao invés de fazer uso do **unlink** e retornar um booleano, o método é responsável por retornar o índice no qual o objeto pertence. Por se tratar de um algoritmo que pecorrerá todos os elementos da lista em seu pior caso e crescer o tempo de execução dado o tamanho da lista, podemos dizer que o método é **O(N)** 
+
+```{java} 
+public int indexOf(Object o) {
+    int index = 0;
+    if (o == null) {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (x.item == null)
+                return index;
+            index++;
+        }
+    } else {
+        for (Node<E> x = first; x != null; x = x.next) {
+            if (o.equals(x.item))
+                return index;
+            index++;
+        }
+    }
+    return -1;
+}
+```
+
+Na busca por índice, realizada pelo método **get(int index)**, o funcionamento é semelhante ao da remoção por índice no que diz respeito à localização do elemento. Em ambos os casos, é utilizado o método **node(index)**, responsável por percorrer a lista até alcançar a posição desejada. A principal diferença está na operação final em que, enquanto o método de remoção por meio do método unlink, o método get apenas acessa o valor armazenado no nó, por meio do atributo item, e o retorna.
+
+
+```{java}
+public E get(int index) {
+    checkElementIndex(index);
+    return node(index).item;
+}
+```
+
+## 6.2 - ArrayList
