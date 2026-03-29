@@ -1,7 +1,7 @@
 ---
 title: "Trabalho 01"
 subtitle: " Análise de complexidade em estruturas de listas"
-author: "Gabriel Leite Fonseca e César"
+author: "Gabriel Leite Fonseca e César Augusto Bispo Santos"
 date: last-modified
 date-format: "DD/MM/YYYY"
 title-block-banner: '#ededed'
@@ -40,8 +40,8 @@ text-align: justify}
 
 
 # Seção 02
-## **4 - Análise Matemática de complexidade dos Algoritmos**
-### 4.1 - Quantidade de Nós
+## **2 - Análise Matemática de complexidade dos Algoritmos**
+### 2.1 - Quantidade de Nós
 ```{java}
 public int quantidadeNos() {
     return this.qtd;
@@ -50,7 +50,7 @@ public int quantidadeNos() {
 
 A forma optada por se implementar o método responsável por retornar a quantidade de nós foi a mais simples, tendo um atributo de quantos nós existe dentro da classe e apenas retornando esse atributo. O método é **O(1)** por ser constante, independente da quantidade de nós sempre retornando a mesma no mesmo tempo. 
 
-### 4.2 - Adicionar
+### 2.2 - Adicionar
 ```{java}
 public void adicionar(T novoValor) {
     Node<T> novo_ultimo  = new Node<T>(); 
@@ -72,7 +72,7 @@ A título de comparação, em um método de inserção no qual o elemento deve s
 
 Isso ocorre porque é necessário percorrer a estrutura elemento por elemento até alcançar a posição desejada. Esse processo de busca é linear em relação ao número de elementos da lista. Após localizar a posição correta, as demais operações de inserção possuem custo constante, mas não alteram a complexidade total do método, que permanece O(n) devido ao custo dominante.
 
-### 4.3 - Pesquisar
+### 2.3 - Pesquisar
 
 
 ![Código método de pesquisa](imgs/pesquisar.jpg)
@@ -85,7 +85,7 @@ A complexidade do método pesquisar é **O(n)**, pois a busca é realizada de fo
 
 No pior caso, quando o elemento não está presente (ou encontra-se na última posição), o método percorre todos *N* elementos da lista até que o ponteiro atual se torne nulo, encerrando a busca. Nesse cenário, o número de operações cresce proporcionalmente ao tamanho da lista, caracterizando um crescimento linear.
 
-### 4.4 - Remover
+### 2.4 - Remover
 
 ![Código método de pesquisa](imgs/remover.jpg)
 
@@ -98,9 +98,9 @@ No pior caso, quando o elemento não está presente ou encontra-se na última po
 Dessa forma, a complexidade do método é **O(n)**.
 
 
-# **6 - Análise ArrayList e LinkedList**
-## 6.1 - LinkedList
-Diferente de um Array o qual deve ter um tamanho definido de memória, a estrutura **LinkedList** do Java apresneta alocação dinâmica, alterando o espaço armazenado a medida que elementos são adicionados ou removidos. A **LinkedList** faz parte da **Java Collections** e implementa a *AbstractSequentialList*, o que - de forma prática - implica que o acesso a um elemento da lista é feita de forma sequencial, percorrendo um a um. 
+# **3 - Análise ArrayList e LinkedList**
+## 3.1 - LinkedList
+Diferente de um Array o qual deve ter um tamanho definido de memória, a estrutura **LinkedList** do Java apresenta alocação dinâmica, alterando o espaço armazenado a medida que elementos são adicionados ou removidos. A **LinkedList** faz parte da **Java Collections** e implementa a *AbstractSequentialList*, o que - de forma prática - implica que o acesso a um elemento da lista é feita de forma sequencial, percorrendo um a um. 
 
 ![Implementação LinkedList](imgs/fluxograma.jpg)
 
@@ -247,4 +247,134 @@ public E get(int index) {
 }
 ```
 
-## 6.2 - ArrayList
+## 3.2 - ArrayList
+O **ArrayList** — assim como o **LinkedList** — faz parte do **Java Collections Framework**, sendo uma implementação baseada em array dinâmico.
+
+Diferentemente de arrays tradicionais, o **ArrayList** possui redimensionamento automático, permitindo que sua capacidade aumente conforme novos elementos são adicionados.
+
+Esse crescimento é realizado internamente por meio do método **grow()**, que é acionado quando a capacidade atual do array é insuficiente para armazenar novos elementos.
+
+```{java}
+private Object[] grow(int minCapacity) {
+    int oldCapacity = elementData.length;
+    if (oldCapacity > 0 || elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        int newCapacity = ArraysSupport.newLength(oldCapacity,
+                minCapacity - oldCapacity, /* minimum growth */
+                oldCapacity >> 1           /* preferred growth */);
+        return elementData = Arrays.copyOf(elementData, newCapacity);
+    } else {
+        return elementData = new Object[Math.max(DEFAULT_CAPACITY, minCapacity)];
+    }
+}
+```
+
+#### **Adicionar**
+Ao analisar o método **add(E e)** do **ArrayList**, estamos tratando de uma inserção no final da lista, ou seja, o elemento é adicionado diretamente na posição correspondente ao valor atual de size, seguida da sua incrementação. No cenário mais comum essa operação ocorre de forma direta no array interno, sem necessidade aumento do array e tendo tempo constante.
+
+Entretanto, no pior caso, quando a capacidade do array já foi totalmente utilizada, é necessário redimensionar o array por meio do método **grow()**. Nesse processo, um novo array maior é criado e todos os elementos do array antigo são copiados para esse novo array.
+
+```{java}
+private Object[] grow(int minCapacity) {
+    int oldCapacity = elementData.length;
+    if (oldCapacity > 0 || elementData != DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+        int newCapacity = ArraysSupport.newLength(oldCapacity,
+                minCapacity - oldCapacity, /* minimum growth */
+                oldCapacity >> 1           /* preferred growth */);
+        return elementData = Arrays.copyOf(elementData, newCapacity);
+    } else {
+        return elementData = new Object[Math.max(DEFAULT_CAPACITY, minCapacity)];
+}
+}
+```
+
+Isso acaba por aumentar o tempo de execução dada a quantidade de elementos da lista, levando o método a ter complexidade linear (**(O(n))**).
+
+#### **Remover**
+Quando falamos dos métodos de remoção, temos uma remoção por índice e uma por objeto, ambas tendo complexidade linear. O método de remoção por índice  **(remove(int index))** remove diretamente o elemento é acessado a partir do índice informado em tempo constante, mas - ao chamar o **fastRemove** - o método **System.arraycopy** é chamado, o qual acaba por deslocar todos os elementos à direita do índice removido uma posição para a esquerda, não deixando lacunas. Por conta disso, ao analisar o pior cenário - que seria remover o primeiro elemento e ter deslocar os elementos a da esquerda, percorrendo um a um - sua complexidade aumenta dada a quantidade de elementos na lista para o pior caso, sendo considerada **O(n)**.-
+
+```{java}
+// Remoção por índice 
+public E remove(int index) {
+    Objects.checkIndex(index, size);
+    final Object[] es = elementData;
+
+    @SuppressWarnings("unchecked") E oldValue = (E) es[index];
+    fastRemove(es, index);
+
+    return oldValue;
+}
+
+// Método chamado na remoção por índice
+private void fastRemove(Object[] es, int i) {
+    modCount++;
+    final int newSize;
+    if ((newSize = size - 1) > i)
+        System.arraycopy(es, i + 1, es, i, newSize - i);
+    es[size = newSize] = null;
+}
+```
+
+Já na remoção por elemento, o método percorre elemento a elemento até encontrar o valor passado como parâmetro, o que, no pior caso, quando o elemento está na última posição da lista, exige percorrer todos os elementos, resultando em complexidade **O(n)** proporcional à quantidade de elementos armazenados. Contudo, mesmo no caso em que o elemento está no início da lista, após a remoção o método **System.arraycopy** é chamado, assim como na remoção por índice, o que provoca o deslocamento de todos os elementos à direita uma posição para a esquerda. Dessa forma, também há um custo linear nesse cenário, mantendo a complexidade **O(n)**.
+
+```{java}
+public boolean remove(Object o) {
+    final Object[] es = elementData;
+    final int size = this.size;
+    int i = 0;
+    found: {
+        if (o == null) {
+            for (; i < size; i++)
+                if (es[i] == null)
+                    break found;
+        } else {
+            for (; i < size; i++)
+                if (o.equals(es[i]))
+                    break found;
+        }
+        return false;
+    }
+    fastRemove(es, i);
+    return true;
+}
+```
+
+#### **Busca**
+Os métodos de busca para o **ArrayList** podem ser por índice - sendo esse o de melhor desemepenho - e por objeto, sendo pior para o pior caso. Na busca por índice **get(int index)**, é passado um parâmetro para o método como parâmetro e o elemento é acessado pelo índice diretamente, levando o método a ser complexidade constante O(1).
+
+```{java}
+public E get(int index) {
+    Objects.checkIndex(index, size);
+    checkForComodification();
+    return root.elementData(offset + index);
+}
+```
+
+Contudo, ao analisarmos a busca por elemento por meio do método **contains**, observamos que o método percorre elemento a elemento até encontrar o valor desejado ou até atingir o final da lista. No pior caso, quando o elemento não está presente ou se encontra na última posição, é necessário percorrer todo o array, fazendo com que o tempo de execução seja proporcional à quantidade de elementos armazenados. Dessa forma, podemos caracterizar a operação como uma busca linear, com complexidade **O(n)**.
+
+```{java}
+public boolean contains(Object o) {
+    return indexOf(o) >= 0;
+}
+
+public int indexOf(Object o) {
+    return indexOfRange(o, 0, size);
+}
+
+int indexOfRange(Object o, int start, int end) {
+    Object[] es = elementData;
+    if (o == null) {
+        for (int i = start; i < end; i++) {
+            if (es[i] == null) {
+                return i;
+            }
+        }
+    } else {
+        for (int i = start; i < end; i++) {
+            if (o.equals(es[i])) {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+```

@@ -1,5 +1,4 @@
 package src.listaencadeada;
-
 import src.colecao.IColecao;
 import java.util.Objects;
 
