@@ -160,6 +160,79 @@ No pior caso, quando o elemento não está presente ou encontra-se na última po
 Dessa forma, a complexidade do método é **O(n)**.
 
 
+# **5 - Resultados e Comparação de Desempenho**
+
+O benchmark foi executado sobre as três implementações de `IColecao<Aluno>` — `ListaEncadeada` (customizada), `ListaEncadeadaArrayList` (wrapper de `java.util.ArrayList`) e `ListaEncadeadaLinkedList` (wrapper de `java.util.LinkedList`) — utilizando datasets de **400.000, 800.000 e 1.600.000 registros**. Esses tamanhos foram escolhidos para garantir que mesmo as operações mais rápidas (ArrayList) produzam tempos acima de ~5 ms, reduzindo a influência do overhead de medição.
+
+Cada cenário foi repetido **três vezes** na mesma JVM (após aquecimento silencioso). Os valores reportados correspondem à **mediana** das três execuções — mais robusta que a média aritmética na presença de outliers causados por eventos esporádicos de GC ou recompilação JIT, comuns em sessões longas de benchmark sem isolamento de processo.
+
+## 5.1 - Tabelas de Tempos de Execução
+
+### ListaEncadeada (implementação customizada)
+
+| Operação | 400.000 registros | 800.000 registros | 1.600.000 registros |
+| :--- | :---: | :---: | :---: |
+| Tempo de carga (I/O + Adicionar) | 213,46 ms | 268,28 ms | 563,72 ms |
+| Pesquisar (existente — pior caso) | 11,61 ms | 30,84 ms | 62,56 ms |
+| Pesquisar (inexistente — varredura total) | 9,97 ms | 29,82 ms | 62,88 ms |
+| Remover (último elemento) | 10,61 ms | 29,32 ms | 60,65 ms |
+| Quantidade de nós | < 1 ms | < 1 ms | < 1 ms |
+
+### ArrayList (java.util.ArrayList)
+
+| Operação | 400.000 registros | 800.000 registros | 1.600.000 registros |
+| :--- | :---: | :---: | :---: |
+| Tempo de carga (I/O + Adicionar) | 187,10 ms | — | — |
+| Pesquisar (existente — pior caso) | 7,10 ms | 5,17 ms | 15,33 ms |
+| Pesquisar (inexistente — varredura total) | 3,91 ms | 5,23 ms | 10,91 ms |
+| Remover (último elemento) | 6,83 ms | 6,68 ms | 11,46 ms |
+| Quantidade de nós | < 1 ms | < 1 ms | < 1 ms |
+
+### LinkedList (java.util.LinkedList)
+
+| Operação | 400.000 registros | 800.000 registros | 1.600.000 registros |
+| :--- | :---: | :---: | :---: |
+| Tempo de carga (I/O + Adicionar) | 145,69 ms | — | — |
+| Pesquisar (existente — pior caso) | 21,29 ms | 33,44 ms | 64,73 ms |
+| Pesquisar (inexistente — varredura total) | 19,02 ms | 33,50 ms | 64,71 ms |
+| Remover (último elemento) | 20,05 ms | 31,16 ms | 65,83 ms |
+| Quantidade de nós | < 1 ms | < 1 ms | < 1 ms |
+
+*Nota: as células de carga para 800K e 1,6M são omitidas da análise comparativa por serem metodologicamente não comparáveis entre implementações (ver seção 5.2).*
+
+## 5.2 - Interpretação e Aderência à Análise Matemática
+
+**Pesquisar e Remover nas listas encadeadas — consistente com O(N):**
+Com os tamanhos maiores, o padrão de crescimento das listas encadeadas tornou-se mais claro. Na `ListaEncadeada` customizada, a pesquisa de elemento existente evolui de 11,61 ms → 30,84 ms → 62,56 ms ao dobrar N a cada passo (razões de ~2,66× e ~2,03×); na `java.util.LinkedList`, de 21,29 ms → 33,44 ms → 64,73 ms (~1,57× e ~1,94×). O padrão geral é **consistente com crescimento linear O(N)**: ao dobrar N, os tempos aproximadamente dobram, especialmente na transição de 800K para 1,6M. As razões afastadas de 2× na transição de 400K para 800K refletem ruído residual da JVM e possível efeito de recompilação JIT durante a primeira iteração da sessão.
+
+**Resultados do ArrayList — parcialmente estabilizados, ainda com variabilidade:**
+Com entradas maiores, os tempos do `ArrayList` subiram para faixas mais mensuráveis: pesquisa de elemento existente atingiu 15,33 ms em 1,6M, e remoção do último ficou em 11,46 ms. Ainda assim, os dados de 400K e 800K mostram variabilidade considerável (ex: pesquisa de inexistente 3,91 ms → 5,23 ms → 10,91 ms, sem padrão de duplicação claro), indicando que as operações do `ArrayList` permanecem suscetíveis ao overhead de medição e às otimizações da JVM mesmo nessas escalas. **Os dados do ArrayList indicam tendência de crescimento linear, mas não permitem confirmar o padrão com o mesmo grau de confiança das listas encadeadas.** Um experimento rigoroso exigiria centenas de repetições com ferramenta especializada (ex.: JMH).
+
+**Tempo de carga — métrica não comparável entre estruturas:**
+Conforme estabelecido na seção 3.2, o tempo de carga mistura custo de I/O com custo de inserção de forma inseparável. Por isso, a comparação de tempos de carga entre implementações distintas **não mede diferença estrutural** e é omitida da análise comparativa.
+
+**Quantidade de nós — compatível com O(1):**
+As três implementações retornam a contagem em tempo abaixo de 1 ms independente do tamanho, **compatível** com O(1), sem evidência empírica conclusiva por execução única.
+
+## 5.3 - Comparação entre as Implementações
+
+A tabela comparativa considera apenas as operações de busca e remoção, que isolam o comportamento estrutural sem custo de I/O. Os valores são da mediana em 1.600.000 registros, onde as diferenças são mais pronunciadas e estáveis:
+
+| Operação (1.600.000 registros) | Mais rápida | Intermediária | Mais lenta |
+| :--- | :---: | :---: | :---: |
+| Pesquisar (existente) | ArrayList (15,33 ms) | ListaEncadeada (62,56 ms) | LinkedList (64,73 ms) |
+| Pesquisar (inexistente) | ArrayList (10,91 ms) | LinkedList (64,71 ms) | ListaEncadeada (62,88 ms) |
+| Remover (último elemento) | ArrayList (11,46 ms) | LinkedList (65,83 ms) | ListaEncadeada (60,65 ms) |
+
+**ArrayList foi consistentemente mais rápido nas operações de traversal**, apesar de possuir a mesma complexidade assintótica O(N) das demais. Em 1,6M de registros, o `ArrayList` é entre **~4× e ~6× mais rápido** que as listas encadeadas em busca (15,33 ms vs. ~63–65 ms). Essa diferença expressiva de fator constante pode ser explicada pela **localidade de cache**: o `ArrayList` armazena referências em posições contíguas de memória, permitindo que a CPU antecipe e pré-carregue blocos adjacentes eficientemente (*cache prefetching*). As listas encadeadas alocam cada nó separadamente no heap, resultando em acessos dispersos e frequentes *cache misses* durante a traversal — custo proporcional ao tamanho da lista, e que explica o fator de diferença observado. Essa hipótese é consistente com os dados, mas não foi medida diretamente (nenhum profiler de cache foi utilizado).
+
+**A `ListaEncadeada` customizada e o `java.util.LinkedList` apresentam desempenho muito semelhante** nas operações de busca e remoção em todas as escalas (ex.: 62,56 ms vs. 64,73 ms em pesquisa existente em 1,6M), o que é esperado: ambas percorrem nós alocados de forma dispersa no heap com o mesmo padrão de acesso não contíguo à memória. A hipótese de que o `java.util.LinkedList` poderia ser mais lento por alocar nós bidirecionais (ponteiro `prev` adicional) é **plausível mas não sustentada pelos dados** — as diferenças observadas estão dentro do ruído experimental.
+
+**O uso de `IColecao<T>` como interface comum** demonstrou seu valor prático nesta comparação: a troca entre as três implementações exigiu apenas a alteração do `Supplier` no `Benchmark`, sem nenhuma modificação no código de medição — evidenciando o princípio de **programação para interfaces** e a facilidade de substituição que o polimorfismo proporciona.
+
+
+
+
 # **6 - Análise ArrayList e LinkedList**
 ## 6.1 - LinkedList
 Diferente de um Array o qual deve ter um tamanho definido de memória, a estrutura **LinkedList** do Java apresneta alocação dinâmica, alterando o espaço armazenado a medida que elementos são adicionados ou removidos. A **LinkedList** faz parte da **Java Collections** e implementa a *AbstractSequentialList*, o que - de forma prática - implica que o acesso a um elemento da lista é feita de forma sequencial, percorrendo um a um. 

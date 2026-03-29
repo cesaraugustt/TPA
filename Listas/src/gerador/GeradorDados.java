@@ -20,7 +20,7 @@ public class GeradorDados {
     public static final String DIRETORIO = "datasets";
 
     /** Tamanhos de dataset usados por padrão em todo o projeto. */
-    public static final int[] TAMANHOS_PADRAO = {100_000, 200_000, 400_000};
+    public static final int[] TAMANHOS_PADRAO = {400_000, 800_000, 1_600_000};
 
     private static final String[] NOMES = {
         "Ana", "Bruno", "Carlos", "Diana", "Eduardo",

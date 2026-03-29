@@ -4,23 +4,43 @@ import src.colecao.IColecao;
 import src.dominio.Aluno;
 import src.gerador.GeradorDados;
 import src.listaencadeada.ListaEncadeada;
+import src.listaencadeada.ListaEncadeadaArrayList;
+import src.listaencadeada.ListaEncadeadaLinkedList;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.function.Supplier;
 
 /**
  * Mede o tempo de operações básicas (inserção, busca, remoção, contagem)
- * sobre uma ListaEncadeada carregada a partir de um arquivo de dataset.
+ * sobre três implementações de IColecao carregadas a partir de arquivos de dataset:
  *
- * Uso:
- *   java src.benchmark.Benchmark datasets/alunos_100000.txt   → um arquivo
- *   java src.benchmark.Benchmark                              → todos os padrões
+ *   1. ListaEncadeada       — implementação customizada
+ *   2. ListaEncadeadaArrayList  — wrapper de java.util.ArrayList
+ *   3. ListaEncadeadaLinkedList — wrapper de java.util.LinkedList
+ *
+ * Uso via CLI:
+ *   java src.benchmark.Benchmark                              → todos os arquivos padrão
+ *   java src.benchmark.Benchmark datasets/alunos_100000.txt  → arquivo específico
  */
 public class Benchmark {
 
+    /** As três implementações que serão comparadas. */
+    @SuppressWarnings("unchecked")
+    private static final Supplier<IColecao<Aluno>>[] IMPLEMENTACOES = new Supplier[]{
+            ListaEncadeada::new,
+            ListaEncadeadaArrayList::new,
+            ListaEncadeadaLinkedList::new
+    };
+
+    private static final String[] NOMES_IMPLEMENTACOES = {
+        "ListaEncadeada (customizada)",
+        "ArrayList (java.util)",
+        "LinkedList (java.util)"
+    };
+
     public static void main(String[] args) {
-        // Se nenhum argumento for passado, usa os arquivos padrão derivados de GeradorDados
         String[] arquivos = args.length > 0 ? args : arquivosPadrao();
         executar(arquivos);
     }
@@ -37,22 +57,28 @@ public class Benchmark {
     /**
      * Ponto de entrada programático: executa o benchmark sobre os arquivos fornecidos.
      * Pode ser chamado diretamente pelo menu principal.
+     *
+     * Para cada arquivo, executa as três implementações em sequência.
+     * O aquecimento usa sempre a ListaEncadeada customizada.
      */
     public static void executar(String[] arquivos) {
-        // Aquecimento: executa uma passagem silenciosa sobre o menor arquivo
-        // para que o JIT compile os hot paths antes das medições reais.
         System.out.println("Aquecendo JIT...");
         aquecer(arquivos[0]);
-        System.out.println("Aquecimento concluido. Iniciando medições...\n");
+        System.out.println("Aquecimento concluido. Iniciando medicoes...\n");
 
         for (String arquivo : arquivos) {
-            executarArquivo(arquivo);
+            System.out.println("*".repeat(62));
+            System.out.printf("* Arquivo: %s%n", arquivo);
+            System.out.println("*".repeat(62) + "\n");
+
+            for (int i = 0; i < IMPLEMENTACOES.length; i++) {
+                executarArquivo(arquivo, IMPLEMENTACOES[i], NOMES_IMPLEMENTACOES[i]);
+            }
         }
     }
 
     /**
-     * Executa o fluxo completo (carga + operações) de forma silenciosa.
-     * Garante que o JIT otimize os hot paths antes das medições reais.
+     * Executa o fluxo completo (carga + operações) de forma silenciosa para aquecimento do JIT.
      */
     private static void aquecer(String caminhoArquivo) {
         try {
@@ -82,10 +108,13 @@ public class Benchmark {
     }
 
     /**
-     * Executa e mede o benchmark completo para um único arquivo.
+     * Executa e mede o benchmark completo para um único arquivo e uma implementação específica.
+     * O Supplier cria uma nova instância limpa da implementação a cada chamada.
      */
-    private static void executarArquivo(String caminhoArquivo) {
-        IColecao<Aluno> lista = new ListaEncadeada<>();
+    private static void executarArquivo(String caminhoArquivo,
+                                        Supplier<IColecao<Aluno>> fornecedor,
+                                        String nomeImplementacao) {
+        IColecao<Aluno> lista = fornecedor.get();
 
         // ── Fase 1: Carga ────────────────────────────────────────────────────
         Aluno ultimoAluno = null;
@@ -144,22 +173,23 @@ public class Benchmark {
         int quantidade = lista.quantidadeNos();
         long tempoContagem = System.nanoTime() - t0;
 
-        imprimir(caminhoArquivo, totalRegistros, tempoCarga,
+        // ── Saída ────────────────────────────────────────────────────────────
+        imprimir(nomeImplementacao, totalRegistros, tempoCarga,
                  tempoBuscaExistente, tempoBuscaInexistente,
                  tempoRemocao, quantidade, tempoContagem);
     }
 
     /**
-     * Formata e imprime os resultados do benchmark.
+     * Formata e imprime os resultados do benchmark para uma implementação.
      */
-    private static void imprimir(String arquivo, int registros, long carga,
+    private static void imprimir(String implementacao, int registros, long carga,
                                   long buscaExiste, long buscaInexiste,
                                   long remocao, int quantidade, long contagem) {
         String sep = "=".repeat(62);
         String div = "-".repeat(62);
 
         System.out.println(sep);
-        System.out.printf(" BENCHMARK — %s%n", arquivo);
+        System.out.printf(" BENCHMARK — %s%n", implementacao);
         System.out.println(sep);
         System.out.printf(" %-30s: %,12d registros%n", "Registros lidos", registros);
         System.out.printf(" %-30s: %s%n",              "Tempo de carga", formatarTempo(carga));
