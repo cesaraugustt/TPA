@@ -2,6 +2,7 @@ package src.benchmark;
 
 import src.colecao.IColecao;
 import src.dominio.Aluno;
+import src.gerador.GeradorDados;
 import src.listaencadeada.ListaEncadeada;
 
 import java.io.BufferedReader;
@@ -18,15 +19,26 @@ import java.io.IOException;
  */
 public class Benchmark {
 
-    private static final String[] ARQUIVOS_PADRAO = {
-        "datasets/alunos_100000.txt",
-        "datasets/alunos_200000.txt",
-        "datasets/alunos_400000.txt"
-    };
-
     public static void main(String[] args) {
-        String[] arquivos = args.length > 0 ? args : ARQUIVOS_PADRAO;
+        // Se nenhum argumento for passado, usa os arquivos padrão derivados de GeradorDados
+        String[] arquivos = args.length > 0 ? args : arquivosPadrao();
+        executar(arquivos);
+    }
 
+    /** Monta o array de caminhos padrão a partir das constantes centralizadas em GeradorDados. */
+    private static String[] arquivosPadrao() {
+        String[] caminhos = new String[GeradorDados.TAMANHOS_PADRAO.length];
+        for (int i = 0; i < GeradorDados.TAMANHOS_PADRAO.length; i++) {
+            caminhos[i] = GeradorDados.caminhoPadrao(GeradorDados.TAMANHOS_PADRAO[i]);
+        }
+        return caminhos;
+    }
+
+    /**
+     * Ponto de entrada programático: executa o benchmark sobre os arquivos fornecidos.
+     * Pode ser chamado diretamente pelo menu principal.
+     */
+    public static void executar(String[] arquivos) {
         // Aquecimento: executa uma passagem silenciosa sobre o menor arquivo
         // para que o JIT compile os hot paths antes das medições reais.
         System.out.println("Aquecendo JIT...");
@@ -34,7 +46,7 @@ public class Benchmark {
         System.out.println("Aquecimento concluido. Iniciando medições...\n");
 
         for (String arquivo : arquivos) {
-            executar(arquivo);
+            executarArquivo(arquivo);
         }
     }
 
@@ -72,7 +84,7 @@ public class Benchmark {
     /**
      * Executa e mede o benchmark completo para um único arquivo.
      */
-    private static void executar(String caminhoArquivo) {
+    private static void executarArquivo(String caminhoArquivo) {
         IColecao<Aluno> lista = new ListaEncadeada<>();
 
         // ── Fase 1: Carga ────────────────────────────────────────────────────
@@ -132,7 +144,6 @@ public class Benchmark {
         int quantidade = lista.quantidadeNos();
         long tempoContagem = System.nanoTime() - t0;
 
-        // ── Saída ────────────────────────────────────────────────────────────
         imprimir(caminhoArquivo, totalRegistros, tempoCarga,
                  tempoBuscaExistente, tempoBuscaInexistente,
                  tempoRemocao, quantidade, tempoContagem);

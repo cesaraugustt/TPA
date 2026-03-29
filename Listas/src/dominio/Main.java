@@ -1,7 +1,11 @@
 package src.dominio;
 
+import src.benchmark.Benchmark;
 import src.colecao.IColecao;
+import src.gerador.GeradorDados;
 import src.listaencadeada.ListaEncadeada;
+
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Main {
@@ -17,7 +21,8 @@ public class Main {
             System.out.println("2. Remover Aluno");
             System.out.println("3. Pesquisar Aluno");
             System.out.println("4. Imprimir todos os Alunos");
-            System.out.println("5. Sair");
+            System.out.println("5. Gerar Dados e Executar Benchmark");
+            System.out.println("6. Sair");
             System.out.print("Escolha uma opcao: ");
 
             String entrada = scanner.nextLine().trim();
@@ -25,7 +30,7 @@ public class Main {
             try {
                 opcao = Integer.parseInt(entrada);
             } catch (NumberFormatException e) {
-                System.out.println("\nEntrada invalida! Insira um numero de 1 a 5.");
+                System.out.println("\nEntrada invalida! Insira um numero de 1 a 6.");
                 continue;
             }
 
@@ -43,11 +48,14 @@ public class Main {
                     imprimirLista(lista);
                     break;
                 case 5:
+                    executarBenchmark(scanner);
+                    break;
+                case 6:
                     System.out.println("\nSaindo do sistema...");
                     executando = false;
                     break;
                 default:
-                    System.out.println("\nOpcao incorreta! Insira um numero de 1 a 5.");
+                    System.out.println("\nOpcao incorreta! Insira um numero de 1 a 6.");
             }
         }
 
@@ -166,6 +174,52 @@ public class Main {
         } catch (NumberFormatException e) {
             System.out.println("\nEntrada invalida! Esperado um numero inteiro.");
             return -1;
+        }
+    }
+
+    /**
+     * Orienta o usuário na geração de datasets e executa o benchmark integrado.
+     * Os tamanhos padrão são definidos centralmente em GeradorDados.TAMANHOS_PADRAO.
+     */
+    private static void executarBenchmark(Scanner scanner) {
+        System.out.println("\n=== Gerador de Dados + Benchmark ===");
+        System.out.println("Tamanhos padrao: 100.000 | 200.000 | 400.000 registros");
+        System.out.print("Usar tamanhos padrao? (s/n): ");
+        String resposta = scanner.nextLine().trim().toLowerCase();
+
+        int[] tamanhos;
+        if (resposta.equals("s") || resposta.equals("sim")) {
+            tamanhos = GeradorDados.TAMANHOS_PADRAO;
+        } else {
+            System.out.print("Informe os tamanhos separados por espaco (ex: 50000 150000): ");
+            String[] partes = scanner.nextLine().trim().split("\\s+");
+            tamanhos = new int[partes.length];
+            for (int i = 0; i < partes.length; i++) {
+                try {
+                    tamanhos[i] = Integer.parseInt(partes[i]);
+                    if (tamanhos[i] <= 0) throw new NumberFormatException();
+                } catch (NumberFormatException e) {
+                    System.out.println("\nTamanho invalido: '" + partes[i] + "'. Operacao cancelada.");
+                    return;
+                }
+            }
+        }
+
+        // ── Fase 1: Geração dos datasets ─────────────────────────────────────
+        System.out.println("\n--- Gerando datasets ---");
+        try {
+            String[] arquivos = new String[tamanhos.length];
+            for (int i = 0; i < tamanhos.length; i++) {
+                arquivos[i] = GeradorDados.caminhoPadrao(tamanhos[i]);
+                GeradorDados.gerarComLog(tamanhos[i], arquivos[i]);
+            }
+
+            // ── Fase 2: Benchmark ─────────────────────────────────────────────
+            System.out.println("\n--- Executando Benchmark ---");
+            Benchmark.executar(arquivos);
+
+        } catch (IOException e) {
+            System.err.println("\nErro ao gerar datasets: " + e.getMessage());
         }
     }
 }

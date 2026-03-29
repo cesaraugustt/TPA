@@ -3,13 +3,24 @@ package src.gerador;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Random;
 
 /**
  * Gera arquivos TXT com registros de alunos aleatórios.
  * Formato de cada linha: matricula;nome;nota
+ *
+ * Centraliza as constantes de diretório e tamanhos padrão usadas
+ * por MainGerador, Benchmark e pelo menu principal.
  */
 public class GeradorDados {
+
+    /** Diretório onde os datasets são gravados. */
+    public static final String DIRETORIO = "datasets";
+
+    /** Tamanhos de dataset usados por padrão em todo o projeto. */
+    public static final int[] TAMANHOS_PADRAO = {100_000, 200_000, 400_000};
 
     private static final String[] NOMES = {
         "Ana", "Bruno", "Carlos", "Diana", "Eduardo",
@@ -26,9 +37,29 @@ public class GeradorDados {
     };
 
     /**
+     * Retorna o caminho padrão de um dataset para o tamanho informado.
+     * Exemplo: caminhoPadrao(100_000) → "datasets/alunos_100000.txt"
+     */
+    public static String caminhoPadrao(int tamanho) {
+        return DIRETORIO + "/alunos_" + tamanho + ".txt";
+    }
+
+    /**
+     * Gera o dataset e imprime o progresso no console (com cronômetro).
+     * Cria o diretório de saída automaticamente se não existir.
+     */
+    public static void gerarComLog(int tamanho, String caminhoArquivo) throws IOException {
+        Files.createDirectories(Paths.get(DIRETORIO));
+        System.out.print("Gerando " + tamanho + " registros em '" + caminhoArquivo + "'... ");
+        long inicio = System.currentTimeMillis();
+        gerar(tamanho, caminhoArquivo);
+        System.out.println("concluido em " + (System.currentTimeMillis() - inicio) + " ms.");
+    }
+
+    /**
      * Gera um arquivo com registros de alunos.
      *
-     * @param quantidade    número de registros a gerar
+     * @param quantidade     número de registros a gerar
      * @param caminhoArquivo caminho completo do arquivo de saída
      */
     public static void gerar(int quantidade, String caminhoArquivo) throws IOException {

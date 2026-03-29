@@ -40,6 +40,68 @@ text-align: justify}
 
 
 # Seção 02
+
+
+# Seção 03
+
+## 3.1 - Implementação
+
+Para avaliar o desempenho prático da nossa implementação de estruturas de dados, desenvolvemos um módulo gerador de arquivos e um mecanismo de benchmark.
+
+Os arquivos de entrada foram gerados utilizando a classe `GeradorDados`. Este módulo cria registros de alunos contendo uma matrícula (de forma sequencial, para garantir unicidade), um nome aleatório e uma nota. Todos os dados são gravados em arquivos `.txt` separados por ponto e vírgula (`;`). Abaixo, um trecho de código que consolida a geração:
+
+```java
+// Trecho do arquivo GeradorDados.java
+Random random = new Random();
+try (BufferedWriter writer = new BufferedWriter(new FileWriter(caminhoArquivo))) {
+    for (int i = 1; i <= quantidade; i++) {
+        int matricula = i;
+        String nome = NOMES[random.nextInt(NOMES.length)] + " " + SOBRENOMES[random.nextInt(SOBRENOMES.length)];
+        int nota = random.nextInt(11);
+        
+        writer.write(matricula + ";" + nome + ";" + nota);
+        writer.newLine();
+    }
+}
+```
+
+A medição dos tempos de execução foi realizada com a classe `Benchmark`. Utilizamos `System.nanoTime()` para capturar o tempo imediatamente antes e após cada operação, isolando individualmente cada trecho medido. O benchmark foi executado **três vezes** de forma consecutiva dentro da mesma JVM, e os valores reportados nas tabelas correspondem à **média aritmética** das três execuções.
+
+```java
+// Trecho do arquivo Benchmark.java
+long inicioCarga = System.nanoTime();
+// ... (leitura sequencial do arquivo e uso da função .adicionar())
+long tempoCarga = System.nanoTime() - inicioCarga;
+
+long t0 = System.nanoTime();
+lista.pesquisar(ultimoAluno);
+long tempoBuscaExistente = System.nanoTime() - t0;
+```
+
+Para mitigar o efeito de *cold start* e o overhead da compilação JIT (Just-In-Time), uma passagem silenciosa de aquecimento (*warm-up*) é executada sobre o menor arquivo antes do início das medições. Ainda assim, existem limitações metodológicas que devem ser reconhecidas: o **tempo de carga** inclui tanto as inserções na lista quanto a leitura sequencial do arquivo em disco, de modo que esse resultado reflete um custo misto de I/O e estrutura de dados — não o custo isolado de `adicionar`. Além disso, fatores como o *Garbage Collector* da JVM, o escalonamento de processos do sistema operacional e a variação de frequência do processador introduzem ruído que não é possível controlar neste experimento.
+
+## 3.2 - Análise de complexidade
+
+O benchmark foi executado sobre a `ListaEncadeada` utilizando os arquivos padronizados de 100.000, 200.000 e 400.000 registros. Cada cenário foi repetido **três vezes** e os valores abaixo representam a **média aritmética** dos resultados, expressos em milissegundos:
+
+| Operação / Tamanho da Lista | 100.000 registros | 200.000 registros | 400.000 registros |
+| :--- | :--- | :--- | :--- |
+| **Tempo de carga (I/O + Adicionar N elementos)** | 35,27 ms | 51,46 ms | 78,59 ms |
+| **Pesquisar (elemento existente no final)** | 3,32 ms | 6,89 ms | 14,81 ms |
+| **Pesquisar (elemento inexistente)** | 3,25 ms | 6,97 ms | 14,33 ms |
+| **Remover (último elemento)** | 2,94 ms | 6,86 ms | 14,13 ms |
+| **Quantidade de nós** | ~700 ns | ~18 ns | ~18 ns |
+
+**Interpretação dos Dados**
+
+Os resultados obtidos são **consistentes** com as análises matemáticas apresentadas na seção anterior, com ressalvas experimentais descritas a seguir para cada operação:
+
+1. **Tempo de carga — custo misto de I/O e inserção:** A operação `adicionar` individualmente possui complexidade O(1) e, portanto, popular uma lista com *N* elementos tem custo total O(N) em termos da estrutura. Os tempos crescem de ~35 ms (100K) para ~78 ms (400K), mas esse fator de ~2,23× para uma entrada 4× maior é **inferior ao esperado para crescimento linear puro**. Isso indica que o custo de leitura do arquivo em disco — amortizado pelos buffers do sistema operacional e da JVM — domina o tempo total, ocultando o custo real da estrutura de dados. Esses resultados **não permitem validar diretamente** a complexidade de inserção, embora sejam compatíveis com o comportamento esperado de operações dominadas por I/O.
+
+2. **Pesquisar e Remover — indicativo de crescimento linear (O(N)):** Estas operações percorrem a lista sequencialmente sem envolver leitura de arquivo, tornando-as os resultados mais representativos da complexidade da estrutura. Os tempos aproximadamente dobram ao dobrar *N*: a pesquisa de elemento existente sobe de 3,32 ms → 6,89 ms → 14,81 ms (razões de ~2,07× e ~2,15×), a pesquisa de inexistente de 3,25 ms → 6,97 ms → 14,33 ms (~2,14× e ~2,06×), e a remoção do último de 2,94 ms → 6,86 ms → 14,13 ms (~2,33× e ~2,06×). Esse padrão de duplicação é **consistente com crescimento linear O(N)**, embora variações pontuais reflitam ruído experimental.
+
+3. **Quantidade de nós — compatível com O(1), sem confirmação empírica direta:** A operação lê o atributo `qtd` sem percorrer a lista. Os tempos medidos estão na ordem de dezenas a centenas de nanossegundos, o que **indica** ausência de crescimento proporcional ao tamanho da entrada. Contudo, uma única chamada por execução não é uma amostra estatisticamente suficiente nessa escala: para confirmar empiricamente O(1), seriam necessárias repetições em *loop* (e.g., milhares de chamadas) para obter uma média significativa. Os resultados são, portanto, **compatíveis** com O(1), mas não constituem evidência empírica conclusiva.
+
 ## **4 - Análise Matemática de complexidade dos Algoritmos**
 ### 4.1 - Quantidade de Nós
 ```{java}
