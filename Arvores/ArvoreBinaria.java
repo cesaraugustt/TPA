@@ -50,22 +50,87 @@ public class ArvoreBinaria<T> extends ArvoreBinariaBase<T> {
         int comparacao = this.comparador.compare(valor, atual.getValor());
 
         if (comparacao < 0) {
-            atual.setEsquerdo(adicionarRecursivo(atual.getEsquerdo(), valor));
+            NoArvore<T> esquerdo = atual.getEsquerdo();
+            atual.setEsquerdo(adicionarRecursivo(esquerdo, valor));
         } else if (comparacao > 0) {
-            atual.setDireito(adicionarRecursivo(atual.getDireito(), valor));
+            NoArvore<T> direito = atual.getDireito();
+            atual.setDireito(adicionarRecursivo(direito, valor));
         }
         return atual;
     }
 
     @Override
     public T pesquisar(T valor) {
-        // TODO: Implementar de forma recursiva
-        throw new UnsupportedOperationException("Método pesquisar não implementado.");
+        NoArvore<T> resultado = pesquisarRecursivo(raiz, valor);
+        if (resultado == null) {
+            return null;
+        }
+        return resultado.getValor();
+    }
+
+    private NoArvore<T> pesquisarRecursivo(NoArvore<T> atual, T valor) {
+        if (atual == null) {
+            return null;
+        }
+        
+        int comparacao = this.comparador.compare(valor, atual.getValor());
+        
+        if (comparacao == 0) {
+            return atual;
+        } else if (comparacao < 0) {
+            NoArvore<T> esquerdo = atual.getEsquerdo();
+            return pesquisarRecursivo(esquerdo, valor);
+        } else {
+            NoArvore<T> direito = atual.getDireito();
+            return pesquisarRecursivo(direito, valor);
+        }
     }
 
     @Override
     public boolean remover(T valor) {
-        // TODO: Implementar de forma recursiva
-        throw new UnsupportedOperationException("Método remover não implementado.");
+        int tamanhoAntes = this.qtdNos;
+        raiz = removerRecursivo(raiz, valor);
+        return this.qtdNos < tamanhoAntes;
+    }
+
+    private NoArvore<T> removerRecursivo(NoArvore<T> atual, T valor) {
+        if (atual == null) {
+            return null;
+        }
+
+        int comparacao = this.comparador.compare(valor, atual.getValor());
+
+        if (comparacao < 0) {
+            atual.setEsquerdo(removerRecursivo(atual.getEsquerdo(), valor));
+        } else if (comparacao > 0) {
+            atual.setDireito(removerRecursivo(atual.getDireito(), valor));
+        } else {
+            NoArvore<T> esquerdo = atual.getEsquerdo();
+            NoArvore<T> direito = atual.getDireito();
+            
+            // Caso 1: 0 ou 1 filho
+            if (esquerdo == null) {
+                this.qtdNos--;
+                return direito;
+            } else if (direito == null) {
+                this.qtdNos--;
+                return esquerdo;
+            } else {
+                // Caso 2: 2 filhos
+                NoArvore<T> sucessor = encontrarMinimo(direito);
+                T valorSucessor = sucessor.getValor();
+                
+                atual.setValor(valorSucessor);
+                atual.setDireito(removerRecursivo(direito, valorSucessor));
+            }
+        }
+        return atual;
+    }
+
+    private NoArvore<T> encontrarMinimo(NoArvore<T> atual) {
+        while (atual.getEsquerdo() != null) {
+            atual = atual.getEsquerdo();
+        }
+        return atual;
     }
 }
