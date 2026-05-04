@@ -4,6 +4,9 @@ import src.benchmark.Benchmark;
 import colecao.IColecao;
 import src.gerador.GeradorDados;
 import Arvores.ArvoreBinaria;
+import Arvores.geradorArquivos.GeradorArquivosBalanceados;
+import Arvores.geradorArquivos.GeradorArquivosOrdenados;
+import Arvores.benchmark.BenchmarkArvore;
 
 import java.io.IOException;
 import java.util.Scanner;
@@ -21,8 +24,9 @@ public class Main {
             System.out.println("2. Remover Aluno");
             System.out.println("3. Pesquisar Aluno");
             System.out.println("4. Imprimir todos os Alunos");
-            System.out.println("5. Gerar Dados e Executar Benchmark");
-            System.out.println("6. Sair");
+            System.out.println("5. Gerar Dados e Executar Benchmark (Listas)");
+            System.out.println("6. Gerar Dados e Executar Benchmark (Arvore Binaria)");
+            System.out.println("7. Sair");
             System.out.print("Escolha uma opcao: ");
 
             String entrada = scanner.nextLine().trim();
@@ -30,7 +34,7 @@ public class Main {
             try {
                 opcao = Integer.parseInt(entrada);
             } catch (NumberFormatException e) {
-                System.out.println("\nEntrada invalida! Insira um numero de 1 a 6.");
+                System.out.println("\nEntrada invalida! Insira um numero de 1 a 7.");
                 continue;
             }
 
@@ -51,11 +55,14 @@ public class Main {
                     executarBenchmark(scanner);
                     break;
                 case 6:
+                    executarBenchmarkArvore(scanner);
+                    break;
+                case 7:
                     System.out.println("\nSaindo do sistema...");
                     executando = false;
                     break;
                 default:
-                    System.out.println("\nOpcao incorreta! Insira um numero de 1 a 6.");
+                    System.out.println("\nOpcao incorreta! Insira um numero de 1 a 7.");
             }
         }
 
@@ -183,7 +190,7 @@ public class Main {
      */
     private static void executarBenchmark(Scanner scanner) {
         System.out.println("\n=== Gerador de Dados + Benchmark ===");
-        System.out.println("Tamanhos padrao: 100.000 | 200.000 | 400.000 registros");
+        System.out.println("Tamanhos padrao: 400.000 | 800.000 | 1.600.000 registros");
         System.out.print("Usar tamanhos padrao? (s/n): ");
         String resposta = scanner.nextLine().trim().toLowerCase();
 
@@ -221,5 +228,52 @@ public class Main {
         } catch (IOException e) {
             System.err.println("\nErro ao gerar datasets: " + e.getMessage());
         }
+    }
+
+    /**
+     * Orienta o usuário na escolha do tamanho e executa a geração de arquivos
+     * e os testes de benchmark especificamente para a Arvore Binaria.
+     */
+    private static void executarBenchmarkArvore(Scanner scanner) {
+        System.out.println("\n=== Benchmark de Arvore Binaria ===");
+        System.out.println("Selecione o tamanho do dataset:");
+        for (int i = 0; i < GeradorDados.TAMANHOS_ARVORE.length; i++) {
+            System.out.printf("%d. %,d registros%n", (i + 1), GeradorDados.TAMANHOS_ARVORE[i]);
+        }
+        System.out.print("Escolha uma opcao: ");
+
+        int opcao = lerInteiro(scanner);
+        int tamanho = 0;
+        
+        if (opcao >= 1 && opcao <= GeradorDados.TAMANHOS_ARVORE.length) {
+            tamanho = GeradorDados.TAMANHOS_ARVORE[opcao - 1];
+        } else {
+            System.out.println("\nOpcao invalida. Operacao cancelada.");
+            return;
+        }
+
+        try {
+            java.nio.file.Files.createDirectories(java.nio.file.Paths.get("datasets"));
+        } catch (IOException e) {
+            System.err.println("\nErro ao criar diretorio datasets: " + e.getMessage());
+            return;
+        }
+
+        String arquivoBalanceado = "datasets/alunos_balanceados_" + tamanho + ".txt";
+        String arquivoOrdenado = "datasets/alunos_ordenados_" + tamanho + ".txt";
+
+        System.out.println("\n--- Gerando datasets (" + tamanho + " registros) ---");
+        
+        System.out.println("Gerando arquivo balanceado...");
+        GeradorArquivosBalanceados.main(new String[]{String.valueOf(tamanho), arquivoBalanceado});
+        
+        System.out.println("Gerando arquivo ordenado (degenerado)...");
+        GeradorArquivosOrdenados.main(new String[]{String.valueOf(tamanho), arquivoOrdenado});
+
+        System.out.println("\n--- Executando Benchmark (Arvore Balanceada) ---");
+        BenchmarkArvore.main(new String[]{arquivoBalanceado});
+
+        System.out.println("\n--- Executando Benchmark (Arvore Degenerada) ---");
+        BenchmarkArvore.main(new String[]{arquivoOrdenado});
     }
 }

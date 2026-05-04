@@ -2,6 +2,7 @@ package src.benchmark;
 
 import colecao.IColecao;
 import dominio.Aluno;
+import dominio.Utils;
 import src.gerador.GeradorDados;
 import src.listaencadeada.ListaEncadeada;
 import src.listaencadeada.ListaEncadeadaArrayList;
@@ -192,24 +193,16 @@ public class Benchmark {
         System.out.printf(" BENCHMARK — %s%n", implementacao);
         System.out.println(sep);
         System.out.printf(" %-30s: %,12d registros%n", "Registros lidos", registros);
-        System.out.printf(" %-30s: %s%n",              "Tempo de carga", formatarTempo(carga));
+        System.out.printf(" %-30s: %s%n",              "Tempo de carga", Utils.formatarTempo(carga));
         System.out.println(div);
-        System.out.printf(" %-30s: %s%n", "Pesquisar (existente)",   formatarTempo(buscaExiste));
-        System.out.printf(" %-30s: %s%n", "Pesquisar (inexistente)", formatarTempo(buscaInexiste));
-        System.out.printf(" %-30s: %s%n", "Remover (ultimo)",        formatarTempo(remocao));
+        System.out.printf(" %-30s: %s%n", "Pesquisar (existente)",   Utils.formatarTempo(buscaExiste));
+        System.out.printf(" %-30s: %s%n", "Pesquisar (inexistente)", Utils.formatarTempo(buscaInexiste));
+        System.out.printf(" %-30s: %s%n", "Remover (ultimo)",        Utils.formatarTempo(remocao));
         System.out.printf(" %-30s: %,12d nos  — %s%n",
-                "Quantidade de nos", quantidade, formatarTempo(contagem));
+                "Quantidade de nos", quantidade, Utils.formatarTempo(contagem));
         System.out.println(sep);
         System.out.println();
     }
 
-    /**
-     * Converte nanosegundos para uma string legível com ms e ns.
-     */
-    private static String formatarTempo(long ns) {
-        if (ns < 1_000_000L) {
-            return String.format("%,12d ns", ns);
-        }
-        return String.format("%,9.2f ms  (%,d ns)", ns / 1_000_000.0, ns);
-    }
+
 }

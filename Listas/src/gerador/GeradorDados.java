@@ -19,8 +19,11 @@ public class GeradorDados {
     /** Diretório onde os datasets são gravados. */
     public static final String DIRETORIO = "datasets";
 
-    /** Tamanhos de dataset usados por padrão em todo o projeto. */
+    /** Tamanhos de dataset usados por padrão para testes de Listas. */
     public static final int[] TAMANHOS_PADRAO = {400_000, 800_000, 1_600_000};
+
+    /** Tamanhos de dataset usados por padrão para testes de Árvores (reduzidos devido ao O(N^2) na degenerada). */
+    public static final int[] TAMANHOS_ARVORE = {50_000, 100_000, 200_000};
 
     private static final String[] NOMES = {
         "Ana", "Bruno", "Carlos", "Diana", "Eduardo",
