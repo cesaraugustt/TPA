@@ -90,7 +90,7 @@ public class ArvoreBinaria<T> extends ArvoreBinariaBase<T> {
         raiz = adicionarRecursivo(raiz, novoValor);
     }
 
-    private NoArvore<T> adicionarRecursivo (NoArvore<T> atual, T valor) {
+    protected NoArvore<T> adicionarRecursivo (NoArvore<T> atual, T valor) {
         if (atual == null) {
             this.qtdNos++;
             return new NoArvore<>(valor);
