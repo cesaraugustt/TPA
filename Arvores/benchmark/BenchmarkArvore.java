@@ -1,6 +1,8 @@
 package Arvores.benchmark;
 
 import Arvores.ArvoreBinaria;
+import Arvores.ArvoreAVL;
+import colecao.IColecao;
 import dominio.Aluno;
 import dominio.Utils;
 
@@ -12,20 +14,22 @@ public class BenchmarkArvore {
 
     public static void main(String[] args) {
         if (args.length < 1) {
-            System.out.println("Uso: java Arvores.benchmark.BenchmarkArvore <caminho_arquivo>");
+            System.out.println("Uso: java Arvores.benchmark.BenchmarkArvore <caminho_arquivo> [--avl]");
             System.exit(1);
         }
         
         String caminhoArquivo = args[0];
+        boolean useAvl = (args.length > 1 && args[1].equals("--avl"));
+
         System.out.println("Aquecendo JIT...");
-        aquecer();
+        aquecer(useAvl);
         System.out.println("Aquecimento concluido. Iniciando medicoes...");
-        executarBenchmark(caminhoArquivo);
+        executarBenchmark(caminhoArquivo, useAvl);
     }
     
-    private static void aquecer() {
+    private static void aquecer(boolean useAvl) {
         // Rotina de aquecimento rápida com carga simulada
-        ArvoreBinaria<Aluno> arvore = new ArvoreBinaria<>(Aluno.obterComparadorPorMatricula());
+        IColecao<Aluno> arvore = useAvl ? new ArvoreAVL<>(Aluno.obterComparadorPorMatricula()) : new ArvoreBinaria<>(Aluno.obterComparadorPorMatricula());
         int N = 1000;
         for (int i = 1; i <= N; i++) {
             arvore.adicionar(new Aluno(i, "Aluno", 5));
@@ -36,8 +40,9 @@ public class BenchmarkArvore {
         arvore.quantidadeNos();
     }
 
-    private static void executarBenchmark(String caminhoArquivo) {
-        ArvoreBinaria<Aluno> arvore = new ArvoreBinaria<>(Aluno.obterComparadorPorMatricula());
+    private static void executarBenchmark(String caminhoArquivo, boolean useAvl) {
+        IColecao<Aluno> arvore = useAvl ? new ArvoreAVL<>(Aluno.obterComparadorPorMatricula()) : new ArvoreBinaria<>(Aluno.obterComparadorPorMatricula());
+        String implementacaoNome = useAvl ? "ArvoreAVL" : "ArvoreBinaria";
         
         // ── Fase 1: Carga ────────────────────────────────────────────────────
         int totalRegistros = 0;
@@ -119,7 +124,7 @@ public class BenchmarkArvore {
         long tempoContagem = System.nanoTime() - t0;
 
         // ── Saída ────────────────────────────────────────────────────────────
-        imprimir("ArvoreBinaria", caminhoArquivo, totalRegistros, tempoCarga,
+        imprimir(implementacaoNome, caminhoArquivo, totalRegistros, tempoCarga,
                  tempoBuscaExistente, tempoBuscaInexistente,
                  tempoRemocao, quantidade, tempoContagem);
     }

@@ -26,7 +26,8 @@ public class Main {
             System.out.println("4. Imprimir todos os Alunos");
             System.out.println("5. Gerar Dados e Executar Benchmark (Listas)");
             System.out.println("6. Gerar Dados e Executar Benchmark (Arvore Binaria)");
-            System.out.println("7. Sair");
+            System.out.println("7. Gerar Dados e Executar Benchmark (Arvore AVL)");
+            System.out.println("8. Sair");
             System.out.print("Escolha uma opcao: ");
 
             String entrada = scanner.nextLine().trim();
@@ -34,7 +35,7 @@ public class Main {
             try {
                 opcao = Integer.parseInt(entrada);
             } catch (NumberFormatException e) {
-                System.out.println("\nEntrada invalida! Insira um numero de 1 a 7.");
+                System.out.println("\nEntrada invalida! Insira um numero de 1 a 8.");
                 continue;
             }
 
@@ -55,14 +56,17 @@ public class Main {
                     executarBenchmark(scanner);
                     break;
                 case 6:
-                    executarBenchmarkArvore(scanner);
+                    processarBenchmarkArvore(scanner, false);
                     break;
                 case 7:
+                    processarBenchmarkArvore(scanner, true);
+                    break;
+                case 8:
                     System.out.println("\nSaindo do sistema...");
                     executando = false;
                     break;
                 default:
-                    System.out.println("\nOpcao incorreta! Insira um numero de 1 a 7.");
+                    System.out.println("\nOpcao incorreta! Insira um numero de 1 a 8.");
             }
         }
 
@@ -232,10 +236,11 @@ public class Main {
 
     /**
      * Orienta o usuário na escolha do tamanho e executa a geração de arquivos
-     * e os testes de benchmark especificamente para a Arvore Binaria.
+     * e os testes de benchmark para a Arvore Binaria ou Arvore AVL.
      */
-    private static void executarBenchmarkArvore(Scanner scanner) {
-        System.out.println("\n=== Benchmark de Arvore Binaria ===");
+    private static void processarBenchmarkArvore(Scanner scanner, boolean useAvl) {
+        String nomeArvore = useAvl ? "Arvore AVL" : "Arvore Binaria";
+        System.out.println("\n=== Benchmark de " + nomeArvore + " ===");
         System.out.println("Selecione o tamanho do dataset:");
         for (int i = 0; i < GeradorDados.TAMANHOS_ARVORE.length; i++) {
             System.out.printf("%d. %,d registros%n", (i + 1), GeradorDados.TAMANHOS_ARVORE[i]);
@@ -270,10 +275,13 @@ public class Main {
         System.out.println("Gerando arquivo ordenado (degenerado)...");
         GeradorArquivosOrdenados.main(new String[]{String.valueOf(tamanho), arquivoOrdenado});
 
-        System.out.println("\n--- Executando Benchmark (Arvore Balanceada) ---");
-        BenchmarkArvore.main(new String[]{arquivoBalanceado});
+        String[] argsBalanceado = useAvl ? new String[]{arquivoBalanceado, "--avl"} : new String[]{arquivoBalanceado};
+        String[] argsOrdenado = useAvl ? new String[]{arquivoOrdenado, "--avl"} : new String[]{arquivoOrdenado};
 
-        System.out.println("\n--- Executando Benchmark (Arvore Degenerada) ---");
-        BenchmarkArvore.main(new String[]{arquivoOrdenado});
+        System.out.println("\n--- Executando Benchmark (" + nomeArvore + " Balanceada) ---");
+        BenchmarkArvore.main(argsBalanceado);
+
+        System.out.println("\n--- Executando Benchmark (" + nomeArvore + " Degenerada) ---");
+        BenchmarkArvore.main(argsOrdenado);
     }
 }
