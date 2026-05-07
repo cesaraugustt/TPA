@@ -4,11 +4,13 @@ public class NoArvore<T> {
     private T valor;
     private NoArvore<T> esquerdo;
     private NoArvore<T> direito;
+    private int altura;
 
     public NoArvore(T valor) {
         this.valor = valor;
         this.esquerdo = null;
         this.direito = null;
+        this.altura = 0;
     }
 
     public T getValor() {
@@ -33,5 +35,13 @@ public class NoArvore<T> {
 
     public void setDireito(NoArvore<T> direito) {
         this.direito = direito;
+    }
+
+    public int getAltura() {
+        return altura;
+    }
+
+    public void setAltura(int altura) {
+        this.altura = altura;
     }
 }
