@@ -4,6 +4,7 @@ import src.benchmark.Benchmark;
 import colecao.IColecao;
 import src.gerador.GeradorDados;
 import Arvores.ArvoreBinaria;
+import Arvores.ArvoreJavaAdapter;
 import Arvores.geradorArquivos.GeradorArquivosBalanceados;
 import Arvores.geradorArquivos.GeradorArquivosOrdenados;
 import Arvores.benchmark.BenchmarkArvore;
@@ -14,8 +15,28 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        IColecao<Aluno> lista = new ArvoreBinaria<>(Aluno.obterComparadorPorMatricula());
         Scanner scanner = new Scanner(System.in);
+
+        System.out.println("=== Escolha a Estrutura de Dados ===");
+        System.out.println("1. Arvore Binaria Customizada");
+        System.out.println("2. Arvore Padrao do Java (TreeMap)");
+        IColecao<Aluno> colecao = null;
+        
+        while (colecao == null) {
+            System.out.print("Opcao: ");
+            int escolha = lerInteiro(scanner);
+            
+            if (escolha == 1) {
+                colecao = new ArvoreBinaria<>(Aluno.obterComparadorPorMatricula());
+                System.out.println("\nIniciando com Arvore Binaria Customizada.\n");
+            } else if (escolha == 2) {
+                colecao = new ArvoreJavaAdapter<>(Aluno.obterComparadorPorMatricula());
+                System.out.println("\nIniciando com Arvore Padrao do Java (TreeMap).\n");
+            } else if (escolha != -1) {
+                System.out.println("\nOpcao invalida! Digite 1 ou 2.");
+            }
+        }
+
         boolean executando = true;
 
         while (executando) {
@@ -30,27 +51,21 @@ public class Main {
             System.out.println("8. Sair");
             System.out.print("Escolha uma opcao: ");
 
-            String entrada = scanner.nextLine().trim();
-            int opcao;
-            try {
-                opcao = Integer.parseInt(entrada);
-            } catch (NumberFormatException e) {
-                System.out.println("\nEntrada invalida! Insira um numero de 1 a 8.");
-                continue;
-            }
+            int opcao = lerInteiro(scanner);
+            if (opcao == -1) continue;
 
             switch (opcao) {
                 case 1:
-                    adicionarAluno(scanner, lista);
+                    adicionarAluno(scanner, colecao);
                     break;
                 case 2:
-                    removerAluno(scanner, lista);
+                    removerAluno(scanner, colecao);
                     break;
                 case 3:
-                    pesquisarAluno(scanner, lista);
+                    pesquisarAluno(scanner, colecao);
                     break;
                 case 4:
-                    imprimirLista(lista);
+                    imprimirColecao(colecao);
                     break;
                 case 5:
                     executarBenchmark(scanner);
@@ -76,7 +91,7 @@ public class Main {
     /**
      * Lê os dados do aluno inseridos pelo usuário e adiciona um novo Aluno à coleção.
      */
-    private static void adicionarAluno(Scanner scanner, IColecao<Aluno> lista) {
+    private static void adicionarAluno(Scanner scanner, IColecao<Aluno> colecao) {
         System.out.print("Matricula: ");
         int matricula = lerInteiro(scanner);
         if (matricula < 0) {
@@ -84,7 +99,7 @@ public class Main {
             return;
         }
 
-        if (lista.pesquisar(Aluno.porMatricula(matricula)) != null) {
+        if (colecao.pesquisar(Aluno.porMatricula(matricula)) != null) {
             System.out.println("\nMatricula " + matricula + " ja cadastrada. Operacao cancelada.");
             return;
         }
@@ -103,7 +118,7 @@ public class Main {
             return;
         }
 
-        lista.adicionar(new Aluno(matricula, nome, nota));
+        colecao.adicionar(new Aluno(matricula, nome, nota));
         System.out.println("\nAluno adicionado com sucesso!");
     }
 
@@ -111,9 +126,9 @@ public class Main {
      * Lê a matrícula de um aluno e remove o registro correspondente da coleção.
      * A matrícula é utilizada como chave pelo equals().
      */
-    private static void removerAluno(Scanner scanner, IColecao<Aluno> lista) {
-        if (lista.quantidadeNos() == 0) {
-            System.out.println("\nA lista esta vazia.");
+    private static void removerAluno(Scanner scanner, IColecao<Aluno> colecao) {
+        if (colecao.quantidadeNos() == 0) {
+            System.out.println("\nA colecao esta vazia.");
             return;
         }
 
@@ -125,7 +140,7 @@ public class Main {
         }
 
         // Apenas a matrícula é necessária, pois equals() compara somente esse campo.
-        boolean removido = lista.remover(Aluno.porMatricula(matricula));
+        boolean removido = colecao.remover(Aluno.porMatricula(matricula));
         if (removido) {
             System.out.println("\nAluno removido com sucesso!");
         } else {
@@ -136,9 +151,9 @@ public class Main {
     /**
      * Lê a matrícula de um aluno e pesquisa o registro correspondente na coleção.
      */
-    private static void pesquisarAluno(Scanner scanner, IColecao<Aluno> lista) {
-        if (lista.quantidadeNos() == 0) {
-            System.out.println("\nA lista esta vazia.");
+    private static void pesquisarAluno(Scanner scanner, IColecao<Aluno> colecao) {
+        if (colecao.quantidadeNos() == 0) {
+            System.out.println("\nA colecao esta vazia.");
             return;
         }
 
@@ -149,7 +164,7 @@ public class Main {
             return;
         }
 
-        Aluno resultado = lista.pesquisar(Aluno.porMatricula(matricula));
+        Aluno resultado = colecao.pesquisar(Aluno.porMatricula(matricula));
         if (resultado != null) {
             System.out.println("\nAluno encontrado: " + resultado);
         } else {
@@ -160,13 +175,13 @@ public class Main {
     /**
      * Imprime todos os alunos armazenados na coleção.
      */
-    private static void imprimirLista(IColecao<Aluno> lista) {
-        if (lista.quantidadeNos() == 0) {
-            System.out.println("\nA lista esta vazia.");
+    private static void imprimirColecao(IColecao<Aluno> colecao) {
+        if (colecao.quantidadeNos() == 0) {
+            System.out.println("\nA colecao esta vazia.");
             return;
         }
-        System.out.println("\n--- Lista de Alunos (" + lista.quantidadeNos() + " aluno(s)) ---");
-        System.out.println(lista);
+        System.out.println("\n--- Colecao de Alunos (" + colecao.quantidadeNos() + " aluno(s)) ---");
+        System.out.println(colecao);
     }
 
     /**
