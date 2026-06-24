@@ -11,10 +11,10 @@ public class Graph<T> {
     }
 
     public void addVertex(T value) {
-
         for (Vertex<T> vertex : vertices) {
-
-            if (vertex.getValue().equals(value)) { return; }
+            if (vertex.getValue().equals(value)) {
+                return;
+            }
         }
 
         Vertex<T> vertex = new Vertex<>(value);
@@ -23,26 +23,49 @@ public class Graph<T> {
         adjacencyList.put(vertex, new ArrayList<>());
     }
 
-    public void addEdge(T origin, T destination, float weight) {
-
+    public void addEdge(T origin, T destination, float capacity) {
         Vertex<T> originVertex = null;
         Vertex<T> destinationVertex = null;
 
         for (Vertex<T> vertex : vertices) {
+            if (vertex.getValue().equals(origin)) {
+                originVertex = vertex;
+            }
 
-            if (vertex.getValue().equals(origin)) { originVertex = vertex; }
-            if (vertex.getValue().equals(destination)) { destinationVertex = vertex; }
+            if (vertex.getValue().equals(destination)) {
+                destinationVertex = vertex;
+            }
         }
 
-        adjacencyList
-                .get(originVertex)
-                .add(new Edge<>(destinationVertex, weight));
+        adjacencyList.get(originVertex)
+                .add(new Edge<>(
+                        originVertex,
+                        destinationVertex,
+                        capacity
+                ));
+    }
+
+    public void printGraph() {
+        for (Vertex<T> vertex : vertices) {
+            System.out.print(vertex + " -> ");
+
+            for (Edge<T> edge : adjacencyList.get(vertex)) {
+                System.out.print(
+                        edge.getDestination()
+                                + "("
+                                + edge.getCapacity()
+                                + ") "
+                );
+            }
+
+            System.out.println();
+        }
     }
 
     public void bfs(T startValue) {
         Vertex<T> start = null;
-        for (Vertex<T> vertex : vertices) {
 
+        for (Vertex<T> vertex : vertices) {
             if (vertex.getValue().equals(startValue)) {
                 start = vertex;
             }
@@ -55,15 +78,14 @@ public class Graph<T> {
         visited.add(start);
 
         while (!queue.isEmpty()) {
-
             Vertex<T> current = queue.poll();
-            System.out.println(current);
-            for (Edge<T> edge : adjacencyList.get(current)) {
 
+            System.out.println(current);
+
+            for (Edge<T> edge : adjacencyList.get(current)) {
                 Vertex<T> neighbor = edge.getDestination();
 
                 if (!visited.contains(neighbor)) {
-
                     visited.add(neighbor);
                     queue.add(neighbor);
                 }
@@ -71,20 +93,11 @@ public class Graph<T> {
         }
     }
 
-    public void printGraph() {
-        for (Vertex<T> vertex : vertices) {
-            System.out.print(vertex + " -> ");
+    public List<Vertex<T>> getVertices() {
+        return vertices;
+    }
 
-            for (Edge<T> edge : adjacencyList.get(vertex)) {
-                System.out.print(
-                        edge.getDestination()
-                                + "("
-                                + edge.getWeight()
-                                + ") "
-                );
-            }
-
-            System.out.println();
-        }
+    public Map<Vertex<T>, List<Edge<T>>> getAdjacencyList() {
+        return adjacencyList;
     }
 }

@@ -2,22 +2,46 @@ public class Main {
 
     public static void main(String[] args) {
 
-        Graph<String> graph = new Graph<>();
+        Graph<Integer> graph = new Graph<>();
 
-        graph.addVertex("A");
-        graph.addVertex("B");
-        graph.addVertex("C");
-        graph.addVertex("D");
+        graph.addVertex(1);
+        graph.addVertex(2);
+        graph.addVertex(3);
+        graph.addVertex(4);
+        graph.addVertex(5);
+        graph.addVertex(6);
+        graph.addVertex(7);
 
-        graph.addEdge("A", "B", 10);
-        graph.addEdge("A", "C", 5);
-        graph.addEdge("B", "D", 8);
-        graph.addEdge("C", "D", 3);
+        graph.addEdge(1, 2, 7);
+        graph.addEdge(1, 3, 9);
+        graph.addEdge(1, 4, 5);
 
+        graph.addEdge(2, 5, 3);
+
+        graph.addEdge(3, 5, 3);
+        graph.addEdge(3, 6, 2);
+
+        graph.addEdge(4, 6, 4);
+
+        graph.addEdge(5, 7, 8);
+        graph.addEdge(6, 7, 9);
+
+        System.out.println("=== GRAFO ===");
         graph.printGraph();
 
-        System.out.println("\nBFS:");
+        FordFulkerson<Integer> fordFulkerson =
+                new FordFulkerson<>();
 
-        graph.bfs("A");
+        float maxFlow =
+                fordFulkerson.calculate(
+                        graph,
+                        1,
+                        7
+                );
+
+        System.out.println();
+        System.out.println(
+                "Fluxo Máximo: " + maxFlow
+        );
     }
 }
