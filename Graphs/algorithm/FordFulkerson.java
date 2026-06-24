@@ -1,6 +1,30 @@
-import java.util.*;
+package algorithm;
+
+import domain.Edge;
+import domain.Graph;
+import domain.Vertex;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FordFulkerson<T> {
+
+    public static class FlowResult<T> {
+        private final float maxFlow;
+        private final Graph<T> residualGraph;
+
+        public FlowResult(float maxFlow, Graph<T> residualGraph) {
+            this.maxFlow = maxFlow;
+            this.residualGraph = residualGraph;
+        }
+
+        public float getMaxFlow() {
+            return maxFlow;
+        }
+
+        public Graph<T> getResidualGraph() {
+            return residualGraph;
+        }
+    }
 
     private Edge<T> findEdge(
             Graph<T> graph,
@@ -77,17 +101,23 @@ public class FordFulkerson<T> {
         return null;
     }
 
-    public float calculate(
+    public FlowResult<T> calculate(
             Graph<T> graph,
             T sourceValue,
             T sinkValue
     ) {
+        // Clona o grafo original para trabalhar sobre uma cópia (grafo residual)
+        Graph<T> residualGraph = new Graph<>(graph);
 
         Vertex<T> source =
-                findVertex(graph, sourceValue);
+                findVertex(residualGraph, sourceValue);
 
         Vertex<T> sink =
-                findVertex(graph, sinkValue);
+                findVertex(residualGraph, sinkValue);
+
+        if (source == null || sink == null) {
+            return new FlowResult<>(0, residualGraph);
+        }
 
         float maxFlow = 0;
 
@@ -101,7 +131,7 @@ public class FordFulkerson<T> {
 
             boolean found =
                     dfsPath(
-                            graph,
+                            residualGraph,
                             source,
                             sink,
                             path,
@@ -132,14 +162,14 @@ public class FordFulkerson<T> {
 
                 Edge<T> reverse =
                         findEdge(
-                                graph,
+                                residualGraph,
                                 edge.getDestination(),
                                 edge.getOrigin()
                         );
 
                 if (reverse == null) {
 
-                    graph.getAdjacencyList()
+                    residualGraph.getAdjacencyList()
                             .get(
                                     edge.getDestination()
                             )
@@ -163,6 +193,6 @@ public class FordFulkerson<T> {
             maxFlow += bottleneck;
         }
 
-        return maxFlow;
+        return new FlowResult<>(maxFlow, residualGraph);
     }
 }

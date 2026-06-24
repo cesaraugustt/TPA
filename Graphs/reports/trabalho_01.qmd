@@ -35,8 +35,32 @@ text-align: justify}
 
 ---
 
-# Seção 01
-[ADICIONAR]
+# Seção 01 - Especificação do Problema
+
+## 1.1 Descrição do Problema
+O problema selecionado consiste na **Otimização de Infraestrutura e Gerenciamento de Banda em Provedores de Internet (ISPs) para Distribuição de Streaming**. Com o crescimento exponencial da demanda por streaming de vídeo sob demanda e transmissões ao vivo de alta definição, os ISPs enfrentam constantes desafios técnicos para rotear e alocar o tráfego de dados de forma eficiente. O tráfego deve trafegar de seus servidores centrais (origem) até os usuários e áreas de consumo finais (destino) utilizando a infraestrutura física de rede disponível de forma otimizada.
+
+A infraestrutura de rede é modelada matematicamente como um grafo direcionado e ponderado de fluxo, onde:
+* **Servidores de Origem (Fontes):** Representam os data centers ou pontos de fornecimento de conteúdo de streaming.
+* **Roteadores Intermediários:** São os nós de rede (roteadores centrais ou de borda) responsáveis por encaminhar os pacotes de dados.
+* **Áreas de Clientes Finais (Sumidouros):** São as sub-redes ou regiões de consumo final onde os usuários acessam o streaming.
+* **Links de Fibra Óptica (Arestas):** São os cabos físicos que conectam os diferentes nós, onde o peso da aresta representa a sua capacidade máxima de banda passante (capacidade limite de tráfego de dados medida em Mbps ou Gbps).
+
+O objetivo do aplicativo é determinar a rota ideal e a distribuição exata de tráfego por cada link físico da rede, maximizando a taxa de transferência total de dados do servidor até os clientes, respeitando estritamente duas restrições clássicas de redes de fluxo:
+1. **Restrição de Capacidade:** O fluxo/tráfego de dados alocado em cada link de fibra óptica não pode exceder sua capacidade máxima nominal.
+2. **Restrição de Conservação de Fluxo:** A taxa de dados que entra em qualquer roteador intermediário deve ser exatamente igual à taxa que sai dele. Não deve ocorrer acúmulo de tráfego nos roteadores intermediários nem perda de pacotes.
+
+## 1.2 Algoritmo de Grafo Aplicado e Justificativa
+Para a resolução do problema prático proposto, foi implementado o algoritmo clássico de **Ford-Fulkerson** para determinação de fluxo máximo.
+
+A aplicabilidade do algoritmo baseia-se nos seguintes fatores estruturais:
+* O servidor de streaming é modelado como a fonte única da rede de fluxo, possuindo capacidade de saída ilimitada.
+* A área de clientes de destino é mapeada como o sumidouro final da rede, drenando todo o fluxo de transmissão.
+* Cada link físico da rede possui uma capacidade de banda definida. O algoritmo analisa iterativamente caminhos aumentantes de fluxo da origem ao destino, calculando gargalos e construindo um grafo residual.
+* O fluxo calculado em cada aresta pelo algoritmo indica exatamente a banda física (Mbps) que o ISP deve rotear por aquele link de fibra óptica.
+* O valor final do fluxo máximo total encontrado pelo algoritmo representa a capacidade máxima de vazão de streaming que a rede consegue suportar de ponta a ponta sem congestionamentos.
+
+Assim, o Ford-Fulkerson resolve perfeitamente a necessidade de otimização de banda de forma ótima e matematicamente comprovada.
 
 ---
 
@@ -207,8 +231,73 @@ Como a implementação realiza sucessivas buscas por caminhos aumentantes, sua c
 Isso ocorre porque, a cada aumento de fluxo, é necessário percorrer arestas da rede para encontrar um novo caminho válido até que não seja mais possível aumentar o fluxo total.
 
 
-# Seção 03
-[ADICIONAR]
+# Seção 03 - Arquitetura do Sistema e Manual de Uso
+
+## 3.1 Arquitetura em Camadas
+O aplicativo foi desenvolvido utilizando uma arquitetura em camadas bem estruturada, visando garantir a separação de responsabilidades (independência de representação de dados, de processamento e de interface).
+
+A divisão do código-fonte em pacotes Java segue a seguinte estrutura conceitual:
+
+*   **`domain` (Camada de Domínio):** Contém as classes que definem a estrutura matemática e genérica do grafo (`Vertex.java`, `Edge.java` e `Graph.java`). Estas classes não possuem dependência de interfaces ou de lógica de arquivos, e implementam operações puras de grafos, incluindo o construtor de cópia profunda para garantir a imutabilidade do grafo original no cálculo do fluxo.
+*   **`data` (Camada de Dados):** Contém a classe `GraphLoader.java`, responsável pelo parser e carregamento de arquivos no formato de matriz de adjacência gerado pelo script do professor. Ela lê o arquivo, mapeia nomes e popula a lista de adjacências de forma bidirecional.
+*   **`algorithm` (Camada de Algoritmo):** Contém a implementação da classe `FordFulkerson.java`. Executa a lógica de caminhos aumentantes e cálculo de fluxo máximo sobre uma cópia de trabalho da rede, retornando o fluxo total e o estado final do grafo de resíduos.
+*   **`view` (Camada de Apresentação):** Contém o ponto de entrada `Main.java` e a interface de console CLI `ConsoleInterface.java`. Gerencia a interação interativa, validação de entradas do teclado, inicialização de menus e formatação do relatório de fluxos.
+
+```mermaid
+graph TD
+    subgraph view["view (Apresentação)"]
+        Main["Main.java"] --> ConsoleInterface["ConsoleInterface.java"]
+    end
+
+    subgraph data["data (Acesso a Dados)"]
+        GraphLoader["GraphLoader.java"]
+    end
+
+    subgraph algorithm["algorithm (Lógica Algorítmica)"]
+        FordFulkerson["FordFulkerson.java"]
+    end
+
+    subgraph domain["domain (Modelo e Domínio)"]
+        Graph["Graph.java"] --> Vertex["Vertex.java"]
+        Graph --> Edge["Edge.java"]
+    end
+
+    ConsoleInterface --> GraphLoader
+    ConsoleInterface --> FordFulkerson
+    FordFulkerson --> Graph
+    GraphLoader --> Graph
+```
+
+---
+
+## 3.2 Manual de Uso do Aplicativo
+O aplicativo funciona em modo de console de texto (CLI) por meio de um menu de opções numéricas. Siga as etapas abaixo para usá-lo:
+
+### 1. Preparação da Topologia de Rede
+*   Use a classe `GeradorArquivosGrafo` dentro do pacote `geradorarquivos` para gerar um arquivo de topologia aleatório. Por padrão, ele criará um arquivo chamado `entrada.txt` na raiz do projeto.
+
+### 2. Inicialização do Sistema
+*   Execute a classe `view.Main` no seu ambiente Java para abrir a interface no terminal.
+
+### 3. Carregamento dos Dados
+*   Selecione a **Opção 1** no menu.
+*   O sistema perguntará pelo caminho do arquivo. Pressione **Enter** para usar o arquivo padrão `entrada.txt` ou informe o nome de outro arquivo.
+*   O console informará quantos roteadores foram lidos com sucesso.
+
+### 4. Visualização de Capacidades
+*   Selecione a **Opção 2** para visualizar todos os roteadores carregados e os cabos de fibra conectados com suas respectivas capacidades de banda.
+
+### 5. Edição Interativa da Rede (Opcional)
+*   Para adicionar um novo roteador, use a **Opção 3** e insira o nome.
+*   Para estabelecer um novo link físico de fibra bidirecional entre roteadores, use a **Opção 4** inserindo o nó de origem, destino e a capacidade em Mbps.
+
+### 6. Execução da Otimização de Tráfego de Streaming
+*   Selecione a **Opção 5**.
+*   Digite o nome do **Servidor de Origem** (ex: `Mupot`) e o nome da **Área de Clientes de Destino** (ex: `Xer`).
+*   O sistema processará o algoritmo de Ford-Fulkerson e exibirá no terminal a **Vazão de Streaming Máxima Total** suportada e detalhará quanto tráfego passará por cada link ativo da rede (ex: `[Link Fibra] Mupot -> Xer: 45.32 / 100.00 Mbps`).
+
+### 7. Encerramento
+*   Selecione a **Opção 6** para sair da aplicação de forma limpa.
 
 ---
 

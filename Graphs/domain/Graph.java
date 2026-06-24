@@ -1,3 +1,5 @@
+package domain;
+
 import java.util.*;
 
 public class Graph<T> {
@@ -8,6 +10,31 @@ public class Graph<T> {
     public Graph() {
         vertices = new ArrayList<>();
         adjacencyList = new HashMap<>();
+    }
+
+    // Construtor de cópia profunda para evitar mutação do grafo original
+    public Graph(Graph<T> other) {
+        this.vertices = new ArrayList<>();
+        this.adjacencyList = new HashMap<>();
+
+        // Clona todos os vértices
+        for (Vertex<T> vertex : other.getVertices()) {
+            this.addVertex(vertex.getValue());
+        }
+
+        // Clona todas as arestas
+        for (Vertex<T> vertex : other.getVertices()) {
+            List<Edge<T>> edges = other.getAdjacencyList().get(vertex);
+            if (edges != null) {
+                for (Edge<T> edge : edges) {
+                    this.addEdge(
+                            edge.getOrigin().getValue(),
+                            edge.getDestination().getValue(),
+                            edge.getCapacity()
+                    );
+                }
+            }
+        }
     }
 
     public void addVertex(T value) {
@@ -37,12 +64,14 @@ public class Graph<T> {
             }
         }
 
-        adjacencyList.get(originVertex)
-                .add(new Edge<>(
-                        originVertex,
-                        destinationVertex,
-                        capacity
-                ));
+        if (originVertex != null && destinationVertex != null) {
+            adjacencyList.get(originVertex)
+                    .add(new Edge<>(
+                            originVertex,
+                            destinationVertex,
+                            capacity
+                    ));
+        }
     }
 
     public void printGraph() {
@@ -70,6 +99,8 @@ public class Graph<T> {
                 start = vertex;
             }
         }
+
+        if (start == null) return;
 
         Queue<Vertex<T>> queue = new LinkedList<>();
         List<Vertex<T>> visited = new ArrayList<>();

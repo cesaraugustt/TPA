@@ -1,3 +1,5 @@
+package domain;
+
 public class Edge<T> {
 
     private Vertex<T> origin;
